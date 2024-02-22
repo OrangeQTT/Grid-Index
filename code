@@ -1,0 +1,149 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace 格网索引
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+        /*16个格子从左向右从上向下编号：
+         * 1  2  3  4
+         * 5  6  7  8
+         * 9  10 11 12
+         * 13 14 15 16
+         * 在格网上的点编号一律计为0
+         * 
+         * 在数组X[]和Y[]中X[0]、Y[0]代表第一个点
+         * K[1]代表第一个点的格子编号，K[0]没有赋值不具意义
+         * h[0]代表鼠标单击点离一号点的距离
+         */
+        public double[] X = new double[20];
+        public double[] Y = new double[20];
+        public double[] K = new double[20];
+        public double[] h = new double[20];
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+        private void 生成随机点ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //创建绘图区域
+            Graphics g = this.CreateGraphics();
+            //设置画笔颜色粗细
+            Pen pen = new Pen(Color.Black, 3);
+            //绘制矩形起点坐标（20，40），设置矩形长宽为240
+            g.DrawRectangle(pen, 20, 40, 240, 240);
+            //绘制纵向格网
+            for (int i = 40; i < 280; i = i + 60)
+            {
+                g.DrawLine(pen, new Point(20, i), new Point(260, i));
+            }
+            //绘制横向格网
+            for (int i = 20; i < 260; i = i + 60)
+            {
+                g.DrawLine(pen, new Point(i, 40), new Point(i, 280));
+            }
+            //设置随机生成点的数量
+            int pointmun = 15;
+            int k = 1;
+            //double[] X = new double[pointmun];
+            //double[] Y = new double[pointmun];
+            //double[] K = new double[pointmun + 1];
+            for (int i = 0; i < pointmun; i++)
+            {
+                Random r = new Random(int.Parse(DateTime.Now.ToString("HHmmssfff")) + i);
+                //随机生成一个n位整数作为点的横纵坐标
+                int num1 = r.Next(20, 260);
+                int num2 = r.Next(40, 280);
+                //存储随机生成点的横坐标纵坐标
+                X[i] = num1;
+                Y[i] = num2;
+                Point point1 = new Point();
+                point1.X = num1;
+                point1.Y = num2;
+                //绘制点
+                g.FillEllipse(Brushes.Red, point1.X, point1.Y, 4, 4);
+                //g.DrawEllipse(pen, 720, 280, 100, 100);
+
+            }
+            //把1到15号的点依次带入每一个格子，直到对一个格子历遍所有的点，完成此步骤后移步到下一个格子再次历遍所有的点
+            for (int m = 100; m <= 280; m = m + 60)
+            {
+
+                for (int n = 80; n <= 260; n = n + 60)
+                {
+
+                    for (int i = 0; i < pointmun; i++)
+                    {
+                        if (X[i] < n && X[i] > n - 60 && Y[i] < m && Y[i] > m - 60)
+                        {
+                            //存入每个点的格子编号
+                            K[i + 1] = k;
+                        }
+                    }
+                    //每次历遍横向格子移动到下一行的第一个格子格子编号加一
+                    k++;
+                }
+            }
+            for (int i = 1; i <= pointmun; i++)
+            {
+                //在listbox中显示点的信息
+                listBox1.Items.Add(i + "号点：" + " " + "X坐标:" + X[i - 1] + "  " + "Y坐标:" + Y[i - 1] + "  " + "方格号:" + K[i]);
+                listBox1.Items.Add("");
+            }
+        }
+        private void listBox1_MouseClick(object sender, MouseEventArgs e)
+        {
+
+        }
+        //添加鼠标单击窗体事件
+        private void Form1_MouseClick(object sender, MouseEventArgs e)
+        {
+            Point p = e.Location;
+            MessageBox.Show(p.ToString());
+            for (int i = 0; i < 15; i++)
+            {
+                //计算鼠标点击点和每一个随机点的距离
+                h[i] = (p.X - X[i]) * (p.X - X[i]) + (p.Y - Y[i]) * (p.Y - Y[i]);
+
+            }
+            for (int i = 0; i < 15; i++)
+            {
+                if (h[i] < h[i + 1])
+                {
+                    //将离鼠标距离最短的点移动到h[14]，得到最短距离
+                    int temp = (int)h[i + 1];
+                    h[i + 1] = h[i];
+                    h[i] = temp;
+
+                }
+            }
+            for (int i = 0; i < 15; i++)
+            {
+                //找到最短距离对应的随机点
+                if (h[14] == (p.X - X[i]) * (p.X - X[i]) + (p.Y - Y[i]) * (p.Y - Y[i]))
+                {
+                    Graphics g = this.CreateGraphics();
+                    //int num1 = (int)X[i];
+                    //int num2 = (int)Y[i];
+                    Point point1 = new Point();
+                    point1.X = (int)X[i];
+                    point1.Y = (int)Y[i];
+                    g.FillEllipse(Brushes.Blue, point1.X, point1.Y, 8, 8);
+                    listBox2.Items.Add((i + 1) + "号点：" + " " + "X坐标:" + X[i] + "  " + "Y坐标:" + Y[i] + "  " + "方格号:" + K[i + 1]);
+                    listBox2.Items.Add("");
+                }
+            }
+        }
+    }
+}
